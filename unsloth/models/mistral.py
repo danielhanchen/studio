@@ -34,6 +34,10 @@ except:
     MistralFlashAttention2 = MistralAttention
 pass
 
+from huggingface_hub.utils import (
+    disable_progress_bars,
+    enable_progress_bars,
+)
 
 def MistralAttention_fast_forward(
     self,
@@ -346,13 +350,15 @@ class FastMistralModel(FastLlamaModel):
             "token"                   : token,
         }
         if bnb_config is None: del full_kwargs["quantization_config"]
-        model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             model_max_length = max_position_embeddings,
             padding_side     = "right",
             token            = token,
         )
+        disable_progress_bars()
+        model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
+        enable_progress_bars()
 
         model, tokenizer = patch_tokenizer(model, tokenizer)
         model = FastMistralModel.post_patch(model)

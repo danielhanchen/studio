@@ -58,6 +58,10 @@ from bitsandbytes.nn import Linear4bit as Bnb_Linear4bit
 from peft.tuners.lora import Linear4bit as Peft_Linear4bit
 from ..save import patch_saving_functions
 
+from huggingface_hub.utils import (
+    disable_progress_bars,
+    enable_progress_bars,
+)
 
 def original_apply_qkv(self, X):
     Q = self.q_proj(X)
@@ -833,12 +837,12 @@ class FastLlamaModel:
 
         if (rope_scaling is None) and (max_seq_length > model_max_seq_length):
             rope_scaling = max_seq_length / model_max_seq_length
-            logger.warning_once(
-                f"Unsloth: {model_name} can only handle sequence lengths of at most "\
-                f"{model_max_seq_length}.\nBut with kaiokendev's RoPE scaling of "\
-                f"{round(rope_scaling, 3)}, it can be magically be extended to "\
-                f"{max_seq_length}!"
-            )
+            # logger.warning_once(
+            #     f"Unsloth: {model_name} can only handle sequence lengths of at most "\
+            #     f"{model_max_seq_length}.\nBut with kaiokendev's RoPE scaling of "\
+            #     f"{round(rope_scaling, 3)}, it can be magically be extended to "\
+            #     f"{max_seq_length}!"
+            # )
             rope_scaling = {"type": "linear", "factor": rope_scaling,}
         pass
 
@@ -865,14 +869,16 @@ class FastLlamaModel:
             "max_position_embeddings" : max_position_embeddings,
         }
         if bnb_config is None: del full_kwargs["quantization_config"]
-        model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             model_max_length = max_position_embeddings,
             padding_side     = "right",
             token            = token,
         )
-
+        disable_progress_bars()
+        model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
+        enable_progress_bars()
+        
         model, tokenizer = patch_tokenizer(model, tokenizer)
         model = FastLlamaModel.post_patch(model)
 
