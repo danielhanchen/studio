@@ -307,7 +307,7 @@ class FastMistralModel(FastLlamaModel):
 
         statistics = \
             f"{P_.GREEN}=={P_.END}(({P_.GREEN}===={P_.END})){P_.GREEN}=={P_.END}  🦥 "\
-            f"{P_.BOLD}{P_.WHITE}Unsloth Studio{P_.E} Free release {__version__}\n"\
+            f"{P_.BOLD}{P_.GREEN}Unsloth Studio{P_.END} Free release {__version__}\n"\
             f"   \\\   /|    GPU: {gpu_stats.name}. Max memory: {max_memory} GB. Platform = {platform_system}.\n"\
             f"O^O/ \_/ \\    Pytorch: {torch.__version__}. CUDA = {gpu_stats.major}.{gpu_stats.minor}. CUDA Toolkit = {torch.version.cuda}.\n"\
             f"\        /    AGPLv3 license: http://github.com/unslothai/studio\n"\
