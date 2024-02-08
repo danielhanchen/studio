@@ -7,7 +7,7 @@ name = "unsloth"
 dynamic = ["version"]
 description = "faster LLM finetuning UI"
 readme = "README.md"
-requires-python = "==3.10"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 keywords = ["ai", "llm",]
 authors = [
