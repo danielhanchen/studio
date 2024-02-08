@@ -28,8 +28,8 @@ from transformers.modeling_attn_mask_utils import (
 from ..kernels import *
 from ._utils import *
 from ._utils import __version__
-if HAS_FLASH_ATTENTION:
-    from flash_attn import flash_attn_func
+# if HAS_FLASH_ATTENTION:
+#     from flash_attn import flash_attn_func
 
 # Final patching code
 from transformers.models.llama.modeling_llama import (
@@ -296,7 +296,8 @@ def LlamaAttention_fast_forward(
     past_key_value = (K, V) if use_cache else None
 
     # Attention module
-    if (not HAS_FLASH_ATTENTION and attention_mask is None):
+    if (attention_mask is None):
+    # if (not HAS_FLASH_ATTENTION and attention_mask is None):
         # Xformers memory efficient attention
         # Also has Flash Attention v2 dispatching
         Q = Q.transpose(1, 2)
@@ -318,11 +319,11 @@ def LlamaAttention_fast_forward(
         A = xformers_attention(Q, K, V, attn_bias = causal_mask)
         A = A.view(bsz, q_len, n_heads, head_dim)
 
-    elif HAS_FLASH_ATTENTION and attention_mask is None:
-        Q = Q.transpose(1, 2)
-        K = K.transpose(1, 2)
-        V = V.transpose(1, 2)
-        A = flash_attn_func(Q, K, V, causal = True)
+    # elif HAS_FLASH_ATTENTION and attention_mask is None:
+    #     Q = Q.transpose(1, 2)
+    #     K = K.transpose(1, 2)
+    #     V = V.transpose(1, 2)
+    #     A = flash_attn_func(Q, K, V, causal = True)
     else:
         # Grouped query attention
         if n_groups != 1:
@@ -810,11 +811,11 @@ class FastLlamaModel:
         max_memory = round(gpu_stats.total_memory / 1024 / 1024 / 1024, 3)
 
         statistics = \
-           f"==((====))==  Unsloth: Fast Llama patching release {__version__}\n"\
+           f"==((====))==  Unsloth Studio Free release {__version__}\n"\
            f"   \\\   /|    GPU: {gpu_stats.name}. Max memory: {max_memory} GB. Platform = {platform_system}.\n"\
            f"O^O/ \_/ \\    Pytorch: {torch.__version__}. CUDA = {gpu_stats.major}.{gpu_stats.minor}. CUDA Toolkit = {torch.version.cuda}.\n"\
-           f"\        /    Bfloat16 = {str(SUPPORTS_BFLOAT16).upper()}. Xformers = {xformers_version}. FA = {HAS_FLASH_ATTENTION}.\n"\
-           f' "-____-"     Free Apache license: http://github.com/unslothai/unsloth'
+           f"\        /    AGPLv3 license: http://github.com/unslothai/studio\n"\
+           f' "-____-"     Downloading {model_name}..... Please wait.....'
         print(statistics)
         FastLlamaModel.pre_patch()
 
@@ -842,7 +843,7 @@ class FastLlamaModel:
         pass
 
         bnb_config = None
-        if load_in_4bit:
+        if load_in_4bit and not model_name.endswith("-bnb-4bit"):
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit              = True,
                 bnb_4bit_use_double_quant = True,

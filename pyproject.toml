@@ -56,12 +56,6 @@ cu121 = [
 colab = [
     "unsloth[cu121]",
 ]
-colab_ampere = [
-    "unsloth[cu121]",
-    "packaging",
-    "ninja",
-    "flash-attn",
-]
 
 [project.urls]
 homepage = "http://www.unsloth.ai"

@@ -43,9 +43,8 @@ else:
 pass
 
 # Check Colab
-try:
-    import google.colab
-except:
+from huggingface_hub.utils._token import is_google_colab
+if not is_google_colab():
     raise RuntimeError("Unsloth Studio only works on Google Colab for now.")
 
 from .models import *

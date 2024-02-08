@@ -92,7 +92,8 @@ def MistralAttention_fast_forward(
     past_key_value = (K, V) if use_cache else None
 
     # Attention module
-    if (not HAS_FLASH_ATTENTION and attention_mask is None):
+    if (attention_mask is None):
+    # if (not HAS_FLASH_ATTENTION and attention_mask is None):
         # Xformers memory efficient attention
         Q = Q.transpose(1, 2)
         K = K.transpose(1, 2)
@@ -130,14 +131,14 @@ def MistralAttention_fast_forward(
         A = xformers_attention(Q, K, V, attn_bias = causal_mask)
         A = A.view(bsz, q_len, n_heads, head_dim)
 
-    elif HAS_FLASH_ATTENTION and attention_mask is None:
-        Q = Q.transpose(1, 2)
-        K = K.transpose(1, 2)
-        V = V.transpose(1, 2)
-        sw = getattr(self.config, "sliding_window", None)
-        sw = kv_seq_len if (sw is None or sw == "null") else sw
-        window = (-1, -1) if (kv_seq_len <= sw) else (sw, sw)
-        A = flash_attn_func(Q, K, V, causal = True, window_size = window)
+    # elif HAS_FLASH_ATTENTION and attention_mask is None:
+    #     Q = Q.transpose(1, 2)
+    #     K = K.transpose(1, 2)
+    #     V = V.transpose(1, 2)
+    #     sw = getattr(self.config, "sliding_window", None)
+    #     sw = kv_seq_len if (sw is None or sw == "null") else sw
+    #     window = (-1, -1) if (kv_seq_len <= sw) else (sw, sw)
+    #     A = flash_attn_func(Q, K, V, causal = True, window_size = window)
     else:
         # Grouped query attention
         # if n_groups != 1:
@@ -299,11 +300,11 @@ class FastMistralModel(FastLlamaModel):
         max_memory = round(gpu_stats.total_memory / 1024 / 1024 / 1024, 3)
 
         statistics = \
-           f"==((====))==  Unsloth: Fast Mistral patching release {__version__}\n"\
+           f"==((====))==  Unsloth Studio Free release {__version__}\n"\
            f"   \\\   /|    GPU: {gpu_stats.name}. Max memory: {max_memory} GB. Platform = {platform_system}.\n"\
            f"O^O/ \_/ \\    Pytorch: {torch.__version__}. CUDA = {gpu_stats.major}.{gpu_stats.minor}. CUDA Toolkit = {torch.version.cuda}.\n"\
-           f"\        /    Bfloat16 = {str(SUPPORTS_BFLOAT16).upper()}. Xformers = {xformers_version}. FA = {HAS_FLASH_ATTENTION}.\n"\
-           f' "-____-"     Apache 2 free license: http://github.com/unslothai/unsloth'
+           f"\        /    AGPLv3 license: http://github.com/unslothai/studio\n"\
+           f' "-____-"     Downloading {model_name}..... Please wait.....'
         print(statistics)
         FastMistralModel.pre_patch()
 
@@ -328,7 +329,7 @@ class FastMistralModel(FastLlamaModel):
         pass
 
         bnb_config = None
-        if load_in_4bit:
+        if load_in_4bit and not model_name.endswith("-bnb-4bit"):
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit              = True,
                 bnb_4bit_use_double_quant = True,
