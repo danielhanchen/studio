@@ -273,3 +273,16 @@ from peft.tuners.lora.layer import LoraLayer
 LoraLayer.update_layer = LoraLayer_update_layer
 from peft.tuners.lora import LoraLayer
 LoraLayer.update_layer = LoraLayer_update_layer
+
+
+class PRINT_COLOURS:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+pass

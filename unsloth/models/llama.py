@@ -57,11 +57,24 @@ from peft import PeftModelForCausalLM
 from bitsandbytes.nn import Linear4bit as Bnb_Linear4bit
 from peft.tuners.lora import Linear4bit as Peft_Linear4bit
 from ..save import patch_saving_functions
+from huggingface_hub.utils._token import is_google_colab
+IS_GOOGLE_COLAB = is_google_colab()
+from tqdm.notebook import tqdm as ProgressBar
 
 from huggingface_hub.utils import (
     disable_progress_bars,
     enable_progress_bars,
 )
+import gc
+
+class P_:
+    BOLD      = "\033[1m"
+    ITALIC    = "\033[3m"
+    UNDERLINE = "\033[4m"
+    END       = "\033[0m"
+    GREEN     = "\033[32m"
+pass
+
 
 def original_apply_qkv(self, X):
     Q = self.q_proj(X)
@@ -815,11 +828,12 @@ class FastLlamaModel:
         max_memory = round(gpu_stats.total_memory / 1024 / 1024 / 1024, 3)
 
         statistics = \
-           f"==((====))==  Unsloth Studio Free release {__version__}\n"\
-           f"   \\\   /|    GPU: {gpu_stats.name}. Max memory: {max_memory} GB. Platform = {platform_system}.\n"\
-           f"O^O/ \_/ \\    Pytorch: {torch.__version__}. CUDA = {gpu_stats.major}.{gpu_stats.minor}. CUDA Toolkit = {torch.version.cuda}.\n"\
-           f"\        /    AGPLv3 license: http://github.com/unslothai/studio\n"\
-           f' "-____-"     Downloading {model_name}..... Please wait.....'
+            f"{P_.G}=={P_.E}(({P_.G}===={P_.E})){P_.G}=={P_.E}  🦥 "\
+            f"{P_.BOLD}{P_.WHITE}Unsloth Studio{P_.E} Free release {__version__}\n"\
+            f"   \\\   /|    GPU: {gpu_stats.name}. Max memory: {max_memory} GB. Platform = {platform_system}.\n"\
+            f"O^O/ \_/ \\    Pytorch: {torch.__version__}. CUDA = {gpu_stats.major}.{gpu_stats.minor}. CUDA Toolkit = {torch.version.cuda}.\n"\
+            f"\        /    AGPLv3 license: http://github.com/unslothai/studio\n"\
+            f' "-____-"     Downloading {model_name}..... Please wait.....'
         print(statistics)
         FastLlamaModel.pre_patch()
 
@@ -855,6 +869,7 @@ class FastLlamaModel:
                 bnb_4bit_compute_dtype    = dtype,
             )
         pass
+        if not IS_GOOGLE_COLAB: raise RuntimeError("Unsloth Studio only works on Google Colab for now.")
 
         # https://huggingface.co/togethercomputer/LLaMA-2-7B-32K/discussions/12
         # RoPE Scaling's max_position_embeddings must be updated
@@ -869,16 +884,32 @@ class FastLlamaModel:
             "max_position_embeddings" : max_position_embeddings,
         }
         if bnb_config is None: del full_kwargs["quantization_config"]
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name,
-            model_max_length = max_position_embeddings,
-            padding_side     = "right",
-            token            = token,
-        )
-        disable_progress_bars()
-        model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
-        enable_progress_bars()
         
+        disable_progress_bars()
+        with ProgressBar(
+                desc = f"Unsloth: Downloading tokenizer for {model_name}",
+                colour = "#14B789",
+                total = 1,
+            ) as progress_bar:
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name,
+                model_max_length = max_position_embeddings,
+                padding_side     = "right",
+                token            = token,
+            )
+            progress_bar.update(1)
+        pass
+
+        with ProgressBar(
+                desc = f"Unsloth: Downloading model for {model_name}",
+                colour = "#14B789",
+                total = 1,
+            ) as progress_bar:
+            model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
+            progress_bar.update(1)
+        pass
+        enable_progress_bars()
+
         model, tokenizer = patch_tokenizer(model, tokenizer)
         model = FastLlamaModel.post_patch(model)
 
@@ -926,6 +957,11 @@ class FastLlamaModel:
         # Add save modules
         patch_saving_functions(model)
 
+        for _ in range(3):
+            gc.collect()
+            torch.cuda.empty_cache()
+        pass
+
         return model, tokenizer
     pass
 
@@ -968,7 +1004,6 @@ class FastLlamaModel:
         pass
 
         # Clear deleted GPU items
-        import gc
         for _ in range(3):
             gc.collect()
             torch.cuda.empty_cache()
@@ -1078,6 +1113,8 @@ class FastLlamaModel:
         for module in target_modules:
             assert(module in accepted_modules)
         pass
+
+        if not IS_GOOGLE_COLAB: raise RuntimeError("Unsloth Studio only works on Google Colab for now.")
 
         # Get LoRA
         arguments = dict(

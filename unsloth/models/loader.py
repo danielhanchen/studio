@@ -14,20 +14,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .llama import FastLlamaModel, logger
+from .llama import FastLlamaModel, logger, IS_GOOGLE_COLAB
 from .mistral import FastMistralModel
 from transformers import AutoConfig
-from transformers import __version__ as transformers_version
+# from transformers import __version__ as transformers_version
 from peft import PeftConfig, PeftModel
 from .mapper import INT_TO_FLOAT_MAPPER, FLOAT_TO_INT_MAPPER
 
 
 # https://github.com/huggingface/transformers/pull/26037 allows 4 bit loading!
-major, minor = transformers_version.split(".")[:2]
-major, minor = int(major), int(minor)
-SUPPORTS_FOURBIT = (major > 4) or (major == 4 and minor >= 37)
-del major, minor
+# major, minor = transformers_version.split(".")[:2]
+# major, minor = int(major), int(minor)
+SUPPORTS_FOURBIT = True #(major > 4) or (major == 4 and minor >= 37)
+# del major, minor
 
+from huggingface_hub.utils import (
+    disable_progress_bars,
+    enable_progress_bars,
+)
 
 def _get_model_name(model_name, load_in_4bit = True):
 
@@ -78,7 +82,9 @@ class FastLanguageModel(FastLlamaModel):
     ):
         old_model_name = model_name
         model_name = _get_model_name(model_name, load_in_4bit)
-
+        disable_progress_bars()
+        if not IS_GOOGLE_COLAB: raise RuntimeError("Unsloth Studio only works on Google Colab for now.")
+        
         # First check if it's a normal model via AutoConfig
         is_peft = False
         try:

@@ -38,6 +38,8 @@ from huggingface_hub.utils import (
     disable_progress_bars,
     enable_progress_bars,
 )
+import gc
+
 
 def MistralAttention_fast_forward(
     self,
@@ -304,11 +306,12 @@ class FastMistralModel(FastLlamaModel):
         max_memory = round(gpu_stats.total_memory / 1024 / 1024 / 1024, 3)
 
         statistics = \
-           f"==((====))==  Unsloth Studio Free release {__version__}\n"\
-           f"   \\\   /|    GPU: {gpu_stats.name}. Max memory: {max_memory} GB. Platform = {platform_system}.\n"\
-           f"O^O/ \_/ \\    Pytorch: {torch.__version__}. CUDA = {gpu_stats.major}.{gpu_stats.minor}. CUDA Toolkit = {torch.version.cuda}.\n"\
-           f"\        /    AGPLv3 license: http://github.com/unslothai/studio\n"\
-           f' "-____-"     Downloading {model_name}..... Please wait.....'
+            f"{P_.G}=={P_.E}(({P_.G}===={P_.E})){P_.G}=={P_.E}  🦥 "\
+            f"{P_.BOLD}{P_.WHITE}Unsloth Studio{P_.E} Free release {__version__}\n"\
+            f"   \\\   /|    GPU: {gpu_stats.name}. Max memory: {max_memory} GB. Platform = {platform_system}.\n"\
+            f"O^O/ \_/ \\    Pytorch: {torch.__version__}. CUDA = {gpu_stats.major}.{gpu_stats.minor}. CUDA Toolkit = {torch.version.cuda}.\n"\
+            f"\        /    AGPLv3 license: http://github.com/unslothai/studio\n"\
+            f' "-____-"     Downloading {model_name}..... Please wait.....'
         print(statistics)
         FastMistralModel.pre_patch()
 
@@ -340,7 +343,9 @@ class FastMistralModel(FastLlamaModel):
                 bnb_4bit_quant_type       = "nf4",
                 bnb_4bit_compute_dtype    = dtype,
             )
-
+        pass
+        if not IS_GOOGLE_COLAB: raise RuntimeError("Unsloth Studio only works on Google Colab for now.")h Studio only works on Google Colab for now.")
+        
         max_position_embeddings = max(max_seq_length, model_max_seq_length)
         full_kwargs = kwargs | \
         {
@@ -350,14 +355,30 @@ class FastMistralModel(FastLlamaModel):
             "token"                   : token,
         }
         if bnb_config is None: del full_kwargs["quantization_config"]
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name,
-            model_max_length = max_position_embeddings,
-            padding_side     = "right",
-            token            = token,
-        )
+
         disable_progress_bars()
-        model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
+        with ProgressBar(
+                desc = f"Unsloth: Downloading tokenizer for {model_name}",
+                colour = "#14B789",
+                total = 1,
+            ) as progress_bar:
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name,
+                model_max_length = max_position_embeddings,
+                padding_side     = "right",
+                token            = token,
+            )
+            progress_bar.update(1)
+        pass
+
+        with ProgressBar(
+                desc = f"Unsloth: Downloading model for {model_name}",
+                colour = "#14B789",
+                total = 1,
+            ) as progress_bar:
+            model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
+            progress_bar.update(1)
+        pass
         enable_progress_bars()
 
         model, tokenizer = patch_tokenizer(model, tokenizer)
@@ -406,7 +427,12 @@ class FastMistralModel(FastLlamaModel):
 
         # Add save modules
         patch_saving_functions(model)
-        
+
+        for _ in range(3):
+            gc.collect()
+            torch.cuda.empty_cache()
+        pass
+
         return model, tokenizer
     pass
 pass
