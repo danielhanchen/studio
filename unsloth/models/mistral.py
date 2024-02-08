@@ -306,7 +306,7 @@ class FastMistralModel(FastLlamaModel):
         max_memory = round(gpu_stats.total_memory / 1024 / 1024 / 1024, 3)
 
         statistics = \
-            f"{P_.G}=={P_.E}(({P_.G}===={P_.E})){P_.G}=={P_.E}  🦥 "\
+            f"{P_.GREEN}=={P_.END}(({P_.GREEN}===={P_.END})){P_.GREEN}=={P_.END}  🦥 "\
             f"{P_.BOLD}{P_.WHITE}Unsloth Studio{P_.E} Free release {__version__}\n"\
             f"   \\\   /|    GPU: {gpu_stats.name}. Max memory: {max_memory} GB. Platform = {platform_system}.\n"\
             f"O^O/ \_/ \\    Pytorch: {torch.__version__}. CUDA = {gpu_stats.major}.{gpu_stats.minor}. CUDA Toolkit = {torch.version.cuda}.\n"\
