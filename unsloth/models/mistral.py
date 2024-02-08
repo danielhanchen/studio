@@ -344,7 +344,7 @@ class FastMistralModel(FastLlamaModel):
                 bnb_4bit_compute_dtype    = dtype,
             )
         pass
-        if not IS_GOOGLE_COLAB: raise RuntimeError("Unsloth Studio only works on Google Colab for now.")h Studio only works on Google Colab for now.")
+        if not IS_GOOGLE_COLAB: raise RuntimeError("Unsloth Studio only works on Google Colab for now.")
         
         max_position_embeddings = max(max_seq_length, model_max_seq_length)
         full_kwargs = kwargs | \
