@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unsloth"
+dynamic = ["version"]
+description = "faster LLM finetuning UI"
+readme = "README.md"
+requires-python = "==3.10"
+license = {file = "LICENSE"}
+keywords = ["ai", "llm",]
+authors = [
+    {email = "info@unsloth.ai"},
+    {name = "Unsloth AI team"},
+]
+maintainers = [
+    {name = "Daniel Han", email = "danielhanchen@gmail.com"},
+    {name = "Michael Han", email = "info@unsloth.ai"},
+]
+classifiers = [
+    "Programming Language :: Python",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "unsloth.models._utils.__version__"}
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+exclude = ["images*"]
+
+[project.optional-dependencies]
+huggingface = [
+    "transformers>=4.37.0",
+    "datasets",
+    "sentencepiece",
+    "accelerate>=0.26.1",
+    "trl>=0.7.9",
+    "peft>=0.7.1",
+    "tqdm",
+    "psutil",
+    "hf_transfer",
+]
+cu121only = [
+    "xformers @ https://download.pytorch.org/whl/cu121/xformers-0.0.22.post7-cp39-cp39-manylinux2014_x86_64.whl ; python_version=='3.9'",
+    "xformers @ https://download.pytorch.org/whl/cu121/xformers-0.0.22.post7-cp310-cp310-manylinux2014_x86_64.whl ; python_version=='3.10'",
+    "xformers @ https://download.pytorch.org/whl/cu121/xformers-0.0.22.post7-cp311-cp311-manylinux2014_x86_64.whl ; python_version=='3.11'",
+]
+cu121 = [
+    "unsloth[huggingface]",
+    "bitsandbytes",
+    "unsloth[cu121only]",
+]
+colab = [
+    "unsloth[cu121]",
+]
+colab_ampere = [
+    "unsloth[cu121]",
+    "packaging",
+    "ninja",
+    "flash-attn",
+]
+
+[project.urls]
+homepage = "http://www.unsloth.ai"
+documentation = "https://github.com/unslothai/unsloth"
+repository = "https://github.com/unslothai/unsloth"
