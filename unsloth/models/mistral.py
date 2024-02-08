@@ -338,15 +338,15 @@ class FastMistralModel(FastLlamaModel):
             )
 
         max_position_embeddings = max(max_seq_length, model_max_seq_length)
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            device_map          = device_map,
-            torch_dtype         = dtype,
-            quantization_config = bnb_config,
-            token               = token,
-            # rope_scaling      = rope_scaling,
-            **kwargs,
-        )
+        full_kwargs = kwargs | \
+        {
+            "device_map"              : device_map,
+            "torch_dtype"             : dtype,
+            "quantization_config"     : bnb_config,
+            "token"                   : token,
+        }
+        if bnb_config is None: del full_kwargs["quantization_config"]
+        model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             model_max_length = max_position_embeddings,

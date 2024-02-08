@@ -855,16 +855,17 @@ class FastLlamaModel:
         # https://huggingface.co/togethercomputer/LLaMA-2-7B-32K/discussions/12
         # RoPE Scaling's max_position_embeddings must be updated
         max_position_embeddings = max(max_seq_length, model_max_seq_length)
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            device_map              = device_map,
-            torch_dtype             = dtype,
-            quantization_config     = bnb_config,
-            token                   = token,
-            rope_scaling            = rope_scaling,
-            max_position_embeddings = max_position_embeddings,
-            **kwargs,
-        )
+        full_kwargs = kwargs | \
+        {
+            "device_map"              : device_map,
+            "torch_dtype"             : dtype,
+            "quantization_config"     : bnb_config,
+            "token"                   : token,
+            "rope_scaling"            : rope_scaling,
+            "max_position_embeddings" : max_position_embeddings,
+        }
+        if bnb_config is None: del full_kwargs["quantization_config"]
+        model = AutoModelForCausalLM.from_pretrained(model_name, **full_kwargs)
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             model_max_length = max_position_embeddings,
