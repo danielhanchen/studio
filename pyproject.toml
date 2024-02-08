@@ -21,18 +21,7 @@ maintainers = [
 classifiers = [
     "Programming Language :: Python",
 ]
-
-[tool.setuptools.dynamic]
-version = {attr = "unsloth.models._utils.__version__"}
-
-[tool.setuptools]
-include-package-data = false
-
-[tool.setuptools.packages.find]
-exclude = ["images*"]
-
-[project.optional-dependencies]
-huggingface = [
+dependencies = [
     "transformers>=4.37.0",
     "datasets",
     "sentencepiece",
@@ -42,20 +31,20 @@ huggingface = [
     "tqdm",
     "psutil",
     "hf_transfer",
-]
-cu121only = [
+    "bitsandbytes",
     "xformers @ https://download.pytorch.org/whl/cu121/xformers-0.0.22.post7-cp39-cp39-manylinux2014_x86_64.whl ; python_version=='3.9'",
     "xformers @ https://download.pytorch.org/whl/cu121/xformers-0.0.22.post7-cp310-cp310-manylinux2014_x86_64.whl ; python_version=='3.10'",
     "xformers @ https://download.pytorch.org/whl/cu121/xformers-0.0.22.post7-cp311-cp311-manylinux2014_x86_64.whl ; python_version=='3.11'",
 ]
-cu121 = [
-    "unsloth[huggingface]",
-    "bitsandbytes",
-    "unsloth[cu121only]",
-]
-colab = [
-    "unsloth[cu121]",
-]
+
+[tool.setuptools.dynamic]
+version = {attr = "unsloth.models._utils.__version__"}
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+exclude = ["images*"]
 
 [project.urls]
 homepage = "http://www.unsloth.ai"
