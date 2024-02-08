@@ -53,7 +53,7 @@ def get_lora_parameters(proj):
     W = base_layer.weight
 
     if not hasattr(proj, "disable_adapters") or proj.disable_adapters or proj.merged:
-        return W, QUANT_STATE(W), None, None, None
+        return W, W.quant_state, None, None, None
     pass
 
     active_adapter = proj.active_adapters[0] if \
@@ -61,30 +61,30 @@ def get_lora_parameters(proj):
     A = proj.lora_A [active_adapter].weight
     B = proj.lora_B [active_adapter].weight
     s = proj.scaling[active_adapter]
-    return W, QUANT_STATE(W), A, B, s
+    return W, W.quant_state, A, B, s
 pass
 
 
 def fast_dequantize(W, quant_state = None, out = None):
-    if quant_state is None: return W
-    if type(quant_state) is not list:
-        # New quant_state as a class
-        # https://github.com/TimDettmers/bitsandbytes/pull/763/files
-        absmax     = quant_state.absmax
-        shape      = quant_state.shape
-        dtype      = quant_state.dtype
-        blocksize  = quant_state.blocksize
-        offset     = quant_state.offset
-        state2     = quant_state.state2
-        absmax2    = state2.absmax
-        code2      = state2.code
-        blocksize2 = state2.blocksize
-    else:
-        # Old quant_state as a list of lists
-        absmax, shape, dtype, blocksize, compressed_stats, _, _ = quant_state
-        offset, state2 = compressed_stats
-        absmax2, code2, blocksize2, _, _, _, _ = state2
-    pass
+    # if quant_state is None: return W
+    # if type(quant_state) is not list:
+    # New quant_state as a class
+    # https://github.com/TimDettmers/bitsandbytes/pull/763/files
+    absmax     = quant_state.absmax
+    shape      = quant_state.shape
+    dtype      = quant_state.dtype
+    blocksize  = quant_state.blocksize
+    offset     = quant_state.offset
+    state2     = quant_state.state2
+    absmax2    = state2.absmax
+    code2      = state2.code
+    blocksize2 = state2.blocksize
+    # else:
+    #     # Old quant_state as a list of lists
+    #     absmax, shape, dtype, blocksize, compressed_stats, _, _ = quant_state
+    #     offset, state2 = compressed_stats
+    #     absmax2, code2, blocksize2, _, _, _, _ = state2
+    # pass
 
     # Create weight matrix
     if out is None:
@@ -117,29 +117,29 @@ pass
 
 
 def fast_gemv(X, W, quant_state, out = None):
-    if quant_state is None: return torch.matmul(X, W, out = out)
+    # if quant_state is None: return torch.matmul(X, W, out = out)
     # For fast X @ W where seq_len == 1
     # From https://github.com/TimDettmers/bitsandbytes/blob/main/bitsandbytes/functional.py#L1469
     bsz, q_len, hd = X.shape
     # assert(q_len == 1)
 
-    if type(quant_state) is not list:
+    # if type(quant_state) is not list:
         # https://github.com/TimDettmers/bitsandbytes/pull/763/files
-        absmax     = quant_state.absmax
-        shape      = quant_state.shape
-        dtype      = quant_state.dtype
-        blocksize  = quant_state.blocksize
-        stats      = quant_state.code
-        offset     = quant_state.offset
-        state2     = quant_state.state2
-        absmax2    = state2.absmax
-        code2      = state2.code
-        blocksize2 = state2.blocksize
-    else:
-        absmax, shape, dtype, blocksize, compressed_stats, quant_type, stats = quant_state
-        offset, state2 = compressed_stats
-        absmax2, code2, blocksize2, _, _, _, _ = state2
-    pass
+    absmax     = quant_state.absmax
+    shape      = quant_state.shape
+    dtype      = quant_state.dtype
+    blocksize  = quant_state.blocksize
+    stats      = quant_state.code
+    offset     = quant_state.offset
+    state2     = quant_state.state2
+    absmax2    = state2.absmax
+    code2      = state2.code
+    blocksize2 = state2.blocksize
+    # else:
+    #     absmax, shape, dtype, blocksize, compressed_stats, quant_type, stats = quant_state
+    #     offset, state2 = compressed_stats
+    #     absmax2, code2, blocksize2, _, _, _, _ = state2
+    # pass
     # assert(dtype == X.dtype)
     bout = shape[0]
 
@@ -193,9 +193,9 @@ def fast_linear_forward(proj, X, temp_lora = None, out = None):
 
     bsz, _, in_dim = X.shape
 
-    if W_quant is None:
-        out = torch.matmul(X, W.t(), out = out)
-    elif bsz <= 2:
+    # if W_quant is None:
+    #     out = torch.matmul(X, W.t(), out = out)
+    if bsz <= 2: # elif bsz <= 2:
         # Only batches of 2 are faster with Gemv
         out = fast_gemv(X, W, W_quant, out = out)
     else:
